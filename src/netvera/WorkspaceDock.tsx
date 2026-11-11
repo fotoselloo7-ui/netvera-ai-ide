@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
-import { host, type WorkspaceEntry, type WorkspaceCommandResult } from '../host';
+import { host, type WorkspaceEntry } from '../host';
 import { AGENT_EDIT_GUIDANCE, calculateProposedContent, parseAgentProposals, type AgentProposal } from './agentProposals';
 
 type Entry = WorkspaceEntry;
-type TerminalResult = WorkspaceCommandResult;
 type AssistantMessage = {
   id: string;
   role: 'user' | 'ai';
