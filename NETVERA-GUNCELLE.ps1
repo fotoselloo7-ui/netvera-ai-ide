@@ -19,9 +19,18 @@ function Require-Tool([string]$tool, [string]$hint) {
     }
 }
 function Invoke-Native([string]$exe, [string[]]$arguments) {
-    $output = & $exe @arguments 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        throw "$exe hata verdi (cikis $LASTEXITCODE): $($output -join [Environment]::NewLine)"
+    # Windows PowerShell 5.1 can surface harmless native stderr as NativeCommandError.
+    # The executable exit code, not stderr/progress text, determines success.
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = & $exe @arguments 2>&1
+        $exitCode = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
+    if ($exitCode -ne 0) {
+        throw "$exe hata verdi (cikis $exitCode): $($output -join [Environment]::NewLine)"
     }
     return ($output -join [Environment]::NewLine)
 }
