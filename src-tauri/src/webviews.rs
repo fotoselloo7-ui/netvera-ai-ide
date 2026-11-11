@@ -38,6 +38,10 @@ const GROK_NAVIGATION_START_LEASE_MS: u64 = 15_000;
 const STATUS_STALE_CHECK_MS: u64 = 30_000;
 const STATUS_EXPIRED_MS: u64 = 40_000;
 const GROK_APP_TITLE_UNCONFIRMED_REASON: &str = "grok_app_title_unconfirmed";
+// Request account selection within the Gemini provider's persistent WebView2 profile.
+// A normal Chrome login does not share the IDE's cookies, so never redirect SSO to Chrome.
+const GEMINI_ACCOUNT_CHOOSER_URL: &str =
+    "https://accounts.google.com/AccountChooser?continue=https%3A%2F%2Fgemini.google.com%2Fapp";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -184,6 +188,19 @@ fn gemini_sorry_navigation_active(provider: &str, url: &tauri::Url) -> bool {
         && url.scheme() == "https"
         && url.host_str() == Some("www.google.com")
         && (url.path() == "/sorry" || url.path().starts_with("/sorry/"))
+}
+
+/// Google uses www.google.com/accounts/* for some SetSID / multi-factor handoffs.
+/// Keep the allowlist narrow and only for Gemini so account cookies remain in the
+/// in-app provider profile instead of opening the user's default Chrome profile.
+fn gemini_google_account_handoff_allowed(provider: &str, url: &tauri::Url) -> bool {
+    provider == "gemini"
+        && url.scheme() == "https"
+        && url.host_str() == Some("www.google.com")
+        && url.port().is_none()
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.path().starts_with("/accounts/")
 }
 
 fn challenge_auxiliary_navigation_allowed(provider: &str, url: &tauri::Url) -> bool {
@@ -1107,6 +1124,7 @@ pub async fn provider_open(
     let nav_provider = provider.clone();
     let popup_app = app.clone();
     let popup_provider = provider.clone();
+    let popup_profile_dir = profile_dir.clone();
     // Inbound-hint transport: the document.title codec (SPEC §7). Cross-platform via Tauri's
     // WebviewBuilder hook — wry implements the underlying observer natively on WebView2 (Windows),
     // WKWebView KVO (macOS), and WebKitGTK (Linux), and it fires for child webviews. This replaces
@@ -1233,6 +1251,7 @@ pub async fn provider_open(
                 return true;
             }
             if challenge_auxiliary_navigation_allowed(&nav_provider, url)
+                || gemini_google_account_handoff_allowed(&nav_provider, url)
                 || adapters::url_allowed_for_provider(&nav_provider, url).unwrap_or(false)
                 || adapters::url_allowed_for_sso(&nav_provider, url).unwrap_or(false)
             {
@@ -1246,8 +1265,13 @@ pub async fn provider_open(
                         serde_json::json!({ "provider": &nav_provider, "host": host }),
                     );
                 }
-                let _ = nav_app.opener().open_url(url.as_str(), None::<&str>);
-                schedule_grok_external_auth_return(&nav_app, &nav_provider, url);
+                // Gemini authentication must not jump to Chrome's unrelated default
+                // account, which cannot transfer its cookies into this WebView.
+                // The user can explicitly choose "Open in browser" instead.
+                if nav_provider != "gemini" {
+                    let _ = nav_app.opener().open_url(url.as_str(), None::<&str>);
+                    schedule_grok_external_auth_return(&nav_app, &nav_provider, url);
+                }
             }
             false
         })
@@ -1257,7 +1281,7 @@ pub async fn provider_open(
             let provider_allowed =
                 adapters::url_allowed_for_provider(&popup_provider, &url).unwrap_or(false);
             let sso_allowed = adapters::url_allowed_for_sso(&popup_provider, &url).unwrap_or(false);
-            let allowlisted = provider_allowed || sso_allowed;
+            let allowlisted = provider_allowed || sso_allowed || gemini_google_account_handoff_allowed(&popup_provider, &url);
             match decide_new_window_action(&url, allowlisted) {
                 // Host popups in our own decorated window: the platform-default popup
                 // (WebView2) is undecorated, so it can't be dragged off the page it covers.
@@ -1275,6 +1299,10 @@ pub async fn provider_open(
                         &label,
                         WebviewUrl::External("about:blank".parse().expect("static url")),
                     )
+                    // Share the parent's provider-specific WebView2 session.
+                    // Otherwise OAuth confirmation may land in a different profile.
+                    .data_directory(popup_profile_dir.clone())
+                    .additional_browser_args(PROVIDER_BROWSER_ARGS)
                     .window_features(features)
                     .title(popup_initial_title(&url))
                     .on_document_title_changed(|window, title| {
@@ -1318,8 +1346,10 @@ pub async fn provider_open(
                             serde_json::json!({ "provider": &popup_provider, "host": host }),
                         );
                     }
-                    let _ = popup_app.opener().open_url(url.as_str(), None::<&str>);
-                    schedule_grok_external_auth_return(&popup_app, &popup_provider, &url);
+                    if popup_provider != "gemini" {
+                        let _ = popup_app.opener().open_url(url.as_str(), None::<&str>);
+                        schedule_grok_external_auth_return(&popup_app, &popup_provider, &url);
+                    }
                     NewWindowResponse::Deny
                 }
             }
@@ -1518,8 +1548,14 @@ pub async fn provider_open_login(
         };
         let _ = provider_open(app.clone(), webview.clone(), provider.clone(), bounds).await?;
     }
-    let login_url = tauri::Url::parse(&adapter.urls.login)
-        .map_err(|error| format!("invalid provider login URL: {error}"))?;
+    let login_url = if provider == "gemini" {
+        // Always offer Google's account picker when the user explicitly clicks
+        // Login / Switch account. Never pick Chrome's default authuser.
+        tauri::Url::parse(GEMINI_ACCOUNT_CHOOSER_URL)
+    } else {
+        tauri::Url::parse(&adapter.urls.login)
+    }
+    .map_err(|error| format!("invalid provider login URL: {error}"))?;
     get_provider_webview(&app, &provider)?
         .navigate(login_url)
         .map_err(|error| error.to_string())?;
@@ -2893,6 +2929,30 @@ mod tests {
         ));
         assert!(PERMISSION_SHIM_JS.contains("location.hostname === 'www.google.com'"));
         assert!(PERMISSION_SHIM_JS.contains("location.pathname === '/sorry'"));
+    }
+
+    #[test]
+    fn gemini_google_handoffs_stay_in_the_provider_profile_only() {
+        assert!(GEMINI_ACCOUNT_CHOOSER_URL.starts_with("https://accounts.google.com/AccountChooser?"));
+        for candidate in [
+            "https://www.google.com/accounts/SetSID",
+            "https://www.google.com/accounts/ServiceLogin?continue=https%3A%2F%2Fgemini.google.com",
+        ] {
+            assert!(gemini_google_account_handoff_allowed("gemini", &url(candidate)));
+        }
+        for candidate in [
+            "https://www.google.com/search",
+            "https://www.google.com.evil.com/accounts/SetSID",
+            "http://www.google.com/accounts/SetSID",
+            "https://www.google.com/sorry",
+            "https://accounts.google.com/AccountChooser",
+        ] {
+            assert!(!gemini_google_account_handoff_allowed("gemini", &url(candidate)));
+        }
+        assert!(!gemini_google_account_handoff_allowed(
+            "chatgpt",
+            &url("https://www.google.com/accounts/SetSID"),
+        ));
     }
 
     #[test]

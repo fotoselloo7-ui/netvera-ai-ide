@@ -116,6 +116,8 @@ export const ja: Record<I18nKey, string> = {
   'provider.currentlyReading': '現在読んでいるメッセージ',
   'provider.clickToRecover': 'クリックで再読み込みして接続を回復',
   'provider.login': 'ログイン',
+  'provider.switchGeminiAccount': 'Google アカウントを切り替え',
+  'provider.geminiLoginGuidance': '有料プランを利用している Google アカウントをアプリ内で選択してください。外部ブラウザーのログイン情報は共有されません。',
   'provider.metaLoginGuidance': 'ゲスト、メール／携帯、またはFacebook／Instagramのログインはこのウィンドウで完了してください。別のブラウザでログインしてもここに戻れません。',
   'provider.moreActions': 'プロバイダーのその他の操作',
   'provider.reload': '再読み込み',

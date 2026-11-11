@@ -116,6 +116,8 @@ export const de: Record<I18nKey, string> = {
   'provider.currentlyReading': 'Wird gerade gelesen',
   'provider.clickToRecover': 'Zum Neuladen und Wiederherstellen klicken',
   'provider.login': 'Anmelden',
+  'provider.switchGeminiAccount': 'Google-Konto wechseln',
+  'provider.geminiLoginGuidance': 'Wähle das abonnierte Google-Konto direkt in der IDE. Browser-Anmeldungen werden nicht in die App übernommen.',
   'provider.metaLoginGuidance': 'Gast, E-Mail/Mobil oder Facebook/Instagram-Anmeldung in diesem Fenster abschließen. Eine Anmeldung in einem anderen Browser kehrt nicht hierher zurück.',
   'provider.moreActions': 'Weitere Anbieteraktionen',
   'provider.reload': 'Neu laden',

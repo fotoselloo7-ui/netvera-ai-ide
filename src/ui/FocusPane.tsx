@@ -356,6 +356,15 @@ function FocusStage({
               {stageExpanded ? t('provider.collapseStage') : t('provider.expandStage')}
             </button>
           ) : null}
+          {provider === 'gemini' ? (
+            <button
+              type="button"
+              className="border border-sky-300 dark:border-sky-700 bg-sky-50 dark:bg-sky-950 px-2 py-1 text-sky-800 dark:text-sky-100 hover:bg-sky-100 dark:hover:bg-sky-900"
+              onClick={() => void onOpenLogin(provider)}
+            >
+              {t('provider.switchGeminiAccount')}
+            </button>
+          ) : null}
           {showLoginCta ? (
             <button
               type="button"
@@ -412,6 +421,11 @@ function FocusStage({
           </div>
         </div>
       </div>
+      {provider === 'gemini' && showLoginCta ? (
+        <div className="border-b border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-200">
+          {t('provider.geminiLoginGuidance')}
+        </div>
+      ) : null}
       {provider === 'meta' && showLoginCta ? (
         <div className="border-b border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
           {t('provider.metaLoginGuidance')}
