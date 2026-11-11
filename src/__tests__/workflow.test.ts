@@ -1387,7 +1387,7 @@ describe('workflow engine', () => {
     await expect(runWorkflow({ text: 'feature', mode: 'coding', roles: DEFAULT_CODING_ROLES })).resolves.toEqual({ ok: true });
     unsubscribe();
     expect(sends).toHaveLength(8);
-    expect(sends[0]).toContain('需求：feature');
+    expect(sends[0]).toContain('Original user request:\nfeature');
     expect(new Set(coderTurns).size).toBe(3);
     expect(statuses).toEqual([
       `💻 Step 1/8 — ${providerName(DEFAULT_CODING_ROLES.planner)}: Write specification…`,
