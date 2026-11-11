@@ -37,7 +37,7 @@ describe('M0 shared constants and adapter seeds', () => {
     expect(CHAT_MODES.coding.icon).toBe('💻');
     expect(PROMPTS.debate.pro('問題')).toBe('請從支持、贊同的角度回答以下問題，提出你最強的論點：\n\n問題');
     expect(PROMPTS.consult.first('問題')).toBe('問題');
-    expect(PROMPTS.coding.plannerSpec('需求')).toContain('需求：需求');
+    expect(PROMPTS.coding.plannerSpec('需求')).toContain('Original user request:\n需求');
     expect(PROMPTS.roundtable.buildPrompt('議題', 1, 'ChatGPT', [])).toContain('【第一輪・開場立論】');
   });
 
