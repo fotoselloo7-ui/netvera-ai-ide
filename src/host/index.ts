@@ -12,6 +12,9 @@ export interface StoredSnapshotInfo {
   completedAt?: string;
 }
 
+export interface WorkspaceEntry { path: string; is_dir: boolean; }
+export interface WorkspaceCommandResult { exit_code: number | null; stdout: string; stderr: string; }
+
 export interface NavBlockedPayload {
   provider: string;
   host: string;
@@ -46,6 +49,14 @@ export const host = {
   onNavBlocked: async (handler: (payload: NavBlockedPayload) => void): Promise<() => void> => {
     const unlisten = await listen<NavBlockedPayload>('nav://blocked', (event) => handler(event.payload));
     return unlisten;
+  },
+  workspace: {
+    listFiles: (root: string): Promise<WorkspaceEntry[]> => invoke('workspace_list_files', { root }),
+    readFile: (root: string, path: string): Promise<string> => invoke('workspace_read_file', { root, path }),
+    applyEdit: (root: string, path: string, expectedContent: string | null, content: string): Promise<void> =>
+      invoke('workspace_apply_edit', { root, path, expectedContent, content }),
+    runCommand: (root: string, command: string): Promise<WorkspaceCommandResult> =>
+      invoke('workspace_run_command', { root, command }),
   },
   provider: {
     open: (provider: AIProvider, bounds: DOMRectReadOnly): Promise<ProviderState> =>
