@@ -95,6 +95,26 @@ function Start-InstalledApp([string]$previousPath) {
     }
     Write-Warning 'Kurulum tamamlandi, ancak uygulama yolu bulunamadi. Baslat menusunden NetVera AI IDE uygulamasini ac.'
 }
+function Ensure-DesktopShortcut {
+    try {
+        $desktop = [Environment]::GetFolderPath('Desktop')
+        if (-not $desktop -or -not (Test-Path -LiteralPath $desktop)) { return }
+        $shortcutPath = Join-Path $desktop 'NetVera AI IDE - Guncelle.lnk'
+        if (Test-Path -LiteralPath $shortcutPath) { return }
+        $shell = New-Object -ComObject WScript.Shell
+        $shortcut = $shell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = Join-Path $repoDir 'NETVERA-GUNCELLE.cmd'
+        $shortcut.WorkingDirectory = $repoDir
+        $shortcut.Description = 'NetVera AI IDE - GitHub Windows guncelleme ve baslatma'
+        $icon = Installed-AppPath
+        if ($icon) { $shortcut.IconLocation = "$icon,0" }
+        $shortcut.Save()
+        Write-Host 'Masaustune NetVera AI IDE - Guncelle kisayolu eklendi.' -ForegroundColor Green
+    } catch {
+        Write-Warning ('Masaustu kisayolu olusturulamadi (guncellemeyi etkilemez): ' + $_.Exception.Message)
+    }
+}
+
 function Close-AppSafely {
     $targets = @(Get-Process -ErrorAction SilentlyContinue | Where-Object {
         $_.ProcessName -ieq 'NetVera AI IDE' -or $_.ProcessName -ieq 'netvera-ai-ide'
@@ -160,6 +180,7 @@ try {
     if (-not $Force -and $previousExe -and (Test-Path -LiteralPath $stateFile) -and
         (Get-Content -LiteralPath $stateFile -Raw).Trim() -eq $sha) {
         Write-Host 'Bu surum zaten kurulu. Uygulama aciliyor...' -ForegroundColor Green
+        Ensure-DesktopShortcut
         Start-InstalledApp $previousExe
         exit 0
     }
@@ -191,6 +212,7 @@ try {
     }
 
     Write-Host '[5/5] Guncelleme tamamlandi. Masaustu uygulamasi aciliyor.' -ForegroundColor Green
+    Ensure-DesktopShortcut
     Start-InstalledApp $previousExe
     Write-Host "Basarili guncelleme: $($sha.Substring(0,12))" -ForegroundColor Green
 }
