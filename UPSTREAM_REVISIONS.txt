@@ -1,0 +1,3 @@
+NetVera AI IDE upstream source revisions
+Multi-AI: https://github.com/TED-H-com/multi-ai-chat-desktop/commit/3100c1bdc9899e6dc360299beaaa1588422cce35
+OpenBrowser: https://github.com/1129Aliasgar/OpenBrowser/commit/2f090f0954435efb07ee35f95e04576b7c6d65fa

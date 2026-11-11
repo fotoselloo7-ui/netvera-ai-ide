@@ -1,0 +1,77 @@
+{
+  "manifest_version": 3,
+  "name": "OpenBrowser Bridge",
+  "version": "0.8.2",
+  "description": "Connects browser AI chat pages to the local OpenBrowser bridge server.",
+  "icons": {
+    "32": "icons/favicon.png",
+    "64": "icons/favicon.png",
+    "128": "icons/favicon.png"
+  },
+  "permissions": ["activeTab", "alarms", "scripting", "storage", "tabs"],
+  "host_permissions": [
+    "http://127.0.0.1:5000/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://chat.deepseek.com/*",
+    "https://claude.ai/*",
+    "https://www.perplexity.ai/*",
+    "https://perplexity.ai/*",
+    "https://chat.z.ai/*",
+    "https://glm.ai/*",
+    "https://open.bigmodel.cn/*",
+    "https://grok.com/*",
+    "https://x.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://chat.deepseek.com/*",
+        "https://claude.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://perplexity.ai/*",
+        "https://chat.z.ai/*",
+        "https://glm.ai/*",
+        "https://open.bigmodel.cn/*",
+        "https://grok.com/*",
+        "https://x.com/*"
+      ],
+      "js": ["src/providers.js", "src/content-script.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+      "js": ["src/chatgpt-api.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["src/gemini-api.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["src/deepseek-api.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "OpenBrowser",
+    "default_icon": {
+      "32": "icons/favicon.png",
+      "64": "icons/favicon.png",
+      "128": "icons/favicon.png"
+    }
+  }
+}

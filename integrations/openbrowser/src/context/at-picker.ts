@@ -1,0 +1,49 @@
+import Enquirer from 'enquirer';
+import { listContextChoices } from './file-context.js';
+
+export function parseAtRefs(text: string): { cleanPrompt: string; paths: string[] } {
+  const paths: string[] = [];
+
+  const cleanPrompt = text
+    .replace(/@([^\s@]+)/g, (_match, ref: string) => {
+      paths.push(ref.replace(/\\/g, '/'));
+      return ' ';
+    })
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return { cleanPrompt, paths };
+}
+
+export async function pickContextPaths(
+  projectRoot: string,
+  initial = '',
+): Promise<string[]> {
+  const allChoices = await listContextChoices(projectRoot);
+  const needle = initial.trim().toLowerCase();
+  const choices = needle
+    ? allChoices.filter((choice) => choice.toLowerCase().includes(needle))
+    : allChoices;
+
+  if (choices.length === 0) {
+    return [];
+  }
+
+  const prompt = new Enquirer.AutoComplete({
+    name: 'context',
+    message: initial ? `Attach (@${initial})` : 'Attach file or folder (@)',
+    limit: 12,
+    multiple: true,
+    choices: choices.map((choice) => ({
+      name: choice.endsWith('/') ? `📁 ${choice}` : `📄 ${choice}`,
+      value: choice,
+    })),
+  });
+
+  const answer = await prompt.run();
+  if (!answer) {
+    return [];
+  }
+
+  return Array.isArray(answer) ? answer : [answer];
+}

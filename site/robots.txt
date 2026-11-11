@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ted-h-com.github.io/multi-ai-chat-desktop/sitemap.xml

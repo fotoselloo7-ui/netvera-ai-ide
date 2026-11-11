@@ -1,0 +1,72 @@
+{
+  "name": "openbrowser",
+  "version": "0.1.0",
+  "description": "Free AI coding agent and harness — use ChatGPT, Claude, or Gemini via browser. No API key. Local CLI for free coding with your browser AI subscription.",
+  "keywords": [
+    "ai-agent",
+    "ai-tool",
+    "free-ai-tool",
+    "ai-harness",
+    "coding-agent",
+    "chatgpt",
+    "chatgpt-coding",
+    "claude",
+    "claude-coding",
+    "gemini",
+    "no-api-key",
+    "browser-extension",
+    "ai-subscription",
+    "free-coding",
+    "local-ai-agent",
+    "cli",
+    "llm",
+    "open-source"
+  ],
+  "type": "module",
+  "private": true,
+  "bin": {
+    "openbrowser": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "dev:server": "tsx watch src/server/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@11.0.0",
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "cfonts": "^3.3.1",
+    "chalk": "^5.6.2",
+    "chokidar": "^3.6.0",
+    "commander": "^12.1.0",
+    "diff": "^5.2.0",
+    "dotenv-safe": "^9.1.0",
+    "enquirer": "^2.4.1",
+    "fast-glob": "^3.3.2",
+    "fastify": "^4.28.1",
+    "fs-extra": "^11.2.0",
+    "gradient-string": "^3.0.0",
+    "jsonc-parser": "^3.3.1",
+    "openbrowser": "link:",
+    "pino": "^9.5.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/diff": "^5.2.3",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
