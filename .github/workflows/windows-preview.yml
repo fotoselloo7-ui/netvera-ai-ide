@@ -74,6 +74,25 @@ jobs:
             }
           }
 
+      - name: Reproduce multi-run selection in Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          . .\scripts\updater-paths.ps1
+          $runJson = '[{"databaseId":43068953007,"headSha":"expected","conclusion":"success","status":"completed"},{"databaseId":43066097064,"headSha":"old","conclusion":"success","status":"completed"},{"databaseId":43065138583,"headSha":"expected","conclusion":"failure","status":"completed"}]'
+          $runId = Get-NetVeraSuccessfulRunId -Json $runJson -ExpectedSha 'expected'
+          if ($runId -is [array] -or [string]$runId -ne '43068953007') {
+            throw "Expected one run ID 43068953007; received [$runId]"
+          }
+          $noMatch = Get-NetVeraSuccessfulRunId -Json $runJson -ExpectedSha 'missing'
+          if ($null -ne $noMatch) { throw "Unmatched build must not select any ID: $noMatch" }
+          $oneJson = '[{"databaseId":43068953007,"headSha":"expected","conclusion":"success","status":"completed"}]'
+          $singleId = Get-NetVeraSuccessfulRunId -Json $oneJson -ExpectedSha 'expected'
+          if ([string]$singleId -ne '43068953007') { throw "Single-run selection failed: $singleId" }
+          $invalidJson = '[{"databaseId":"43068953007 43066097064","headSha":"expected","conclusion":"success","status":"completed"}]'
+          $rejected = $false
+          try { Get-NetVeraSuccessfulRunId -Json $invalidJson -ExpectedSha 'expected' | Out-Null } catch { $rejected = $true }
+          if (-not $rejected) { throw 'Concatenated run IDs were not rejected' }
+
       - name: Verify TypeScript, lint, tests and adapters
         run: pnpm verify
 
