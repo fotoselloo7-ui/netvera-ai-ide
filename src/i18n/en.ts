@@ -114,6 +114,8 @@ export const en: Record<I18nKey, string> = {
   'provider.currentlyReading': 'Currently reading',
   'provider.clickToRecover': 'Click to reload and recover the connection',
   'provider.login': 'Login',
+  'provider.switchGeminiAccount': 'Switch Google account',
+  'provider.geminiLoginGuidance': 'Choose your subscribed Google account inside the IDE. Browser sign-ins do not transfer to this app.',
   'provider.metaLoginGuidance': 'Complete guest, email/mobile, or Facebook/Instagram sign-in in this window. A login in another browser cannot return here.',
   'provider.moreActions': 'More provider actions',
   'provider.reload': 'Reload',
