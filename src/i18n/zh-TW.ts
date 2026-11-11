@@ -104,6 +104,8 @@ export const zhTW: Record<I18nKey, string> = {
   'provider.currentlyReading': '正在閱讀',
   'provider.clickToRecover': '點一下重新載入以恢復連線',
   'provider.login': '登入',
+  'provider.switchGeminiAccount': '切換 Google 帳戶',
+  'provider.geminiLoginGuidance': '請在 IDE 內選擇已訂閱的 Google 帳戶。外部瀏覽器的登入狀態不會同步至此應用程式。',
   'provider.metaLoginGuidance': '訪客、Email／手機或 Facebook／Instagram 登入請在這個視窗完成。在別的瀏覽器登入無法回到 app。',
   'provider.moreActions': '更多 provider 操作',
   'provider.reload': '重新載入',
