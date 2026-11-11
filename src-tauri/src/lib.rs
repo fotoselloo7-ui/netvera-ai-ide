@@ -29,7 +29,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             workspace::workspace_list_files,
             workspace::workspace_read_file,
-            workspace::workspace_write_file,
+            workspace::workspace_apply_edit,
             workspace::workspace_run_command,
             webviews::provider_open,
             webviews::provider_close,
