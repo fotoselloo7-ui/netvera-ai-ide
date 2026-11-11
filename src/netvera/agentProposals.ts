@@ -76,7 +76,7 @@ export function parseAgentProposals(
     if (!Array.isArray(ops) || ops.length > MAX_OPERATIONS) continue;
     ops.forEach((entry, index) => {
       const operation = parseAgentOperation(entry);
-      if (operation) proposals.push({ id: messageId + ':' + index, provider, operation });
+      if (operation) proposals.push({ id: messageId + ':' + proposals.length + ':' + index, provider, operation });
     });
   }
   return proposals;
@@ -99,10 +99,12 @@ export function calculateProposedContent(operation: AgentFileOperation, before: 
   return before.slice(0, first) + operation.replace + before.slice(first + search.length);
 }
 
-export const AGENT_EDIT_GUIDANCE = String.raw`Bu görev bir kodlama çalışma alanına ait. Önce sorunu analiz et; dosya değişikliği önereceksen yanıtının sonunda JSON kod bloğu ekle:
-```json
-{"operations":[{"action":"EDIT_FILE","path":"src/relative-file.ts","search":"eski metin","replace":"yeni metin"}]}
-```
-Yeni dosya için {"action":"CREATE_FILE","path":"...","content":"tam içerik"} kullan.
-RUN_COMMAND, DELETE_FILE veya mutlak dosya yolu önerme. Projeye erişimin olduğunu varsayma: yalnızca aşağıda paylaşılmış dosya içeriğine dayan.
-Bunlar yalnızca ÖNERİDİR; diske yazılmaz, kullanıcı önizleyip onaylar.`;
+export const AGENT_EDIT_GUIDANCE = [
+  'Bu görev bir kodlama çalışma alanına ait. Önce sorunu analiz et; dosya değişikliği önereceksen yanıtının sonunda JSON kod bloğu ekle:',
+  '```json',
+  '{"operations":[{"action":"EDIT_FILE","path":"src/relative-file.ts","search":"eski metin","replace":"yeni metin"}]}',
+  '```',
+  'Yeni dosya için {"action":"CREATE_FILE","path":"...","content":"tam içerik"} kullan.',
+  'RUN_COMMAND, DELETE_FILE veya mutlak dosya yolu önerme. Projeye erişimin olduğunu varsayma: yalnızca aşağıda paylaşılmış dosya içeriğine dayan.',
+  'Bunlar yalnızca ÖNERİDİR; diske yazılmaz, kullanıcı önizleyip onaylar.',
+].join('\n');
