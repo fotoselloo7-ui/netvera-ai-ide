@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
-import { invoke } from '@tauri-apps/api/core';
+import { host, type WorkspaceEntry, type WorkspaceCommandResult } from '../host';
 import { AGENT_EDIT_GUIDANCE, calculateProposedContent, parseAgentProposals, type AgentProposal } from './agentProposals';
 
-type Entry = { path: string; is_dir: boolean };
-type TerminalResult = { exit_code: number | null; stdout: string; stderr: string };
+type Entry = WorkspaceEntry;
+type TerminalResult = WorkspaceCommandResult;
 type AssistantMessage = {
   id: string;
   role: 'user' | 'ai';
@@ -55,7 +55,7 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
     setActiveRoot('');
     setPreview(null);
     try {
-      const found = await invoke<Entry[]>('workspace_list_files', { root: nextRoot });
+      const found = await host.workspace.listFiles(nextRoot);
       setEntries(found);
       setActiveRoot(nextRoot);
       setSelected('');
@@ -73,7 +73,7 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
     setBusy(true);
     setPreview(null);
     try {
-      const text = await invoke<string>('workspace_read_file', { root: activeRoot, path });
+      const text = await host.workspace.readFile(activeRoot, path);
       setSelected(path);
       setOriginal(text);
       setContent(text);
@@ -87,7 +87,7 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
     if (!window.confirm(selected + '\n\nBu dosyaya yaptığın değişiklikler kaydedilsin mi?')) return;
     setBusy(true);
     try {
-      await invoke('workspace_apply_edit', { root: activeRoot, path: selected, expectedContent: original, content });
+      await host.workspace.applyEdit(activeRoot, selected, original, content);
       setOriginal(content);
       setMessage(selected + ' kaydedildi. Git ile geri alabilirsin.');
     } catch (error) { setMessage(String(error)); }
@@ -100,7 +100,7 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
     setBusy(true);
     setTerminal('> ' + command + '\nÇalışıyor...');
     try {
-      const output = await invoke<TerminalResult>('workspace_run_command', { root: activeRoot, command });
+      const output = await host.workspace.runCommand(activeRoot, command);
       setTerminal('> ' + command + '\n' + output.stdout + '\n' + output.stderr + '\nÇıkış kodu: ' + (output.exit_code ?? 'bilinmiyor'));
     } catch (error) { setTerminal('Komut hatası: ' + String(error)); }
     finally { setBusy(false); }
@@ -146,7 +146,7 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
       if (op.action === 'EDIT_FILE' && !existsInIndex) throw new Error('Dosya listede yok. Klasörü yenile ve tekrar dene.');
       if (op.action === 'CREATE_FILE' && existsInIndex) throw new Error('Yeni dosya zaten var. Üzerine yazılamaz.');
       const before = existsInIndex
-        ? await invoke<string>('workspace_read_file', { root: activeRoot, path: op.path })
+        ? await host.workspace.readFile(activeRoot, op.path)
         : null;
       const after = calculateProposedContent(op, before);
       if (after.length > 2_000_000) throw new Error('Önerilen dosya 2 MB sınırını aşıyor.');
@@ -165,15 +165,13 @@ export function WorkspaceDock({ messages, onSendTask, sendDisabled = false, onVi
     )) return;
     setBusy(true);
     try {
-      await invoke('workspace_apply_edit', {
-        root: activeRoot, path: proposal.operation.path, expectedContent: before, content: after,
-      });
+      await host.workspace.applyEdit(activeRoot, proposal.operation.path, before, after);
       setSelected(proposal.operation.path);
       setOriginal(after);
       setContent(after);
       setPreview(null);
       setMessage('Değişiklik uygulandı: ' + proposal.operation.path);
-      const found = await invoke<Entry[]>('workspace_list_files', { root: activeRoot });
+      const found = await host.workspace.listFiles(activeRoot);
       setEntries(found);
     } catch (error) { setMessage('Değişiklik uygulanamadı: ' + String(error)); }
     finally { setBusy(false); }
