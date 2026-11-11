@@ -332,6 +332,7 @@ export default function App() {
   const [focusPaneWidth, setFocusPaneWidth] = useState(() => defaultSettings().focusPaneWidth);
   const [stageExpanded, setStageExpanded] = useState(false);
   const [messagesMaximized, setMessagesMaximized] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [scrollFocusedProvider, setScrollFocusedProvider] = useState<AIProvider | undefined>();
   const [presentation, setPresentation] = useState<PresentationByProvider>(() => defaultPresentation());
   const [centerSurface, setCenterSurface] = useState<CenterSurface>('text');
@@ -434,7 +435,7 @@ export default function App() {
   const centerTextFinal = latestCenterBubble?.final === true;
 
   const overlayGuardOpen =
-    (Boolean(preflight) && !preflightLoginPending) || Boolean(stepTimeout?.timedOut) || settingsOpen || Boolean(reportPreview) || processTraceDetailOpen || messagesMaximized;
+    (Boolean(preflight) && !preflightLoginPending) || Boolean(stepTimeout?.timedOut) || settingsOpen || Boolean(reportPreview) || processTraceDetailOpen || messagesMaximized || workspaceOpen;
   const manualFocusIdlePaused = Boolean(checkpoint) || Boolean(stepTimeout);
   overlayGuardOpenRef.current = overlayGuardOpen;
 
@@ -2228,7 +2229,7 @@ export default function App() {
           locale={locale}
         />
       ) : null}
-      <WorkspaceDock />
+      <WorkspaceDock messages={messages} onSendTask={send} sendDisabled={isProcessing} onVisibilityChange={setWorkspaceOpen} />
     </main>
   );
 }

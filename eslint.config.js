@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'refs', 'src-tauri/gen', 'src-tauri/target', '.orchestration',
     // Vendored from the page kit and kept byte identical.
-    'site/assets/flow.js'] },
+    'site/assets/flow.js', 'integrations/openbrowser/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -1,6 +1,10 @@
 fn main() {
     tauri_build::try_build(tauri_build::Attributes::new().app_manifest(
         tauri_build::AppManifest::new().commands(&[
+            "workspace_list_files",
+            "workspace_read_file",
+            "workspace_apply_edit",
+            "workspace_run_command",
             "provider_open",
             "provider_close",
             "provider_show",
