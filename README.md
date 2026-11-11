@@ -2,10 +2,10 @@
 
 **Windows için üç asistanlı kodlama çalışma alanı.** Normal ChatGPT, Claude ve Gemini sohbet hesaplarıyla çoklu tartışma/inceleme iş akışını geliştirmek için temel alınmıştır.
 
-## Bu ilk commit'te gerçekten ne var?
+## Depoda bulunan kaynaklar ve geliştirilen parçalar
 
 - **Multi-AI Chat Desktop kaynak kodu** (deponun kökü): sağlayıcı web oturumları ve çoklu iş akışları, mevcut lisans/NOTICE korunmuştur.
-- **OpenBrowser kaynak kodu** (`integrations/openbrowser/`): ayrı CLI/Chrome eklentisi, mevcut MIT lisansı korunmuştur. Henüz masaüstü uygulamasına tam bağlı değildir.
+- **OpenBrowser kaynak kodu** (`integrations/openbrowser/`): ayrı CLI/Chrome eklentisi, mevcut MIT lisansı korunmuştur. Dosya düzenleme modülleri referans alınarak kontrollü çalışma alanı arayüzüne eklenmiştir; iki çalışma zamanı hâlâ bütünüyle birleşmiş değildir.
 - **NetVera çalışma alanı paneli** (`src/netvera/WorkspaceDock.tsx`): proje klasörü, dosya listesi, metin dosyası düzenleme, açık kullanıcı onayıyla kaydetme ve terminal komutları.
 - **Tauri yerel çalışma alanı komutları** (`src-tauri/src/workspace.rs`): klasör sınırlaması, UTF-8 dosya okuma/yazma, elle başlatılan terminal komutları. Sistem komutları asistan çıktısından otomatik çalıştırılmaz.
 - `UPSTREAM_REVISIONS.txt`: iki kaynağın indirildiği commit kimlikleri.
@@ -49,3 +49,21 @@ Normal asistan web oturumlarının otomatik kullanımı sağlayıcıların kulla
 Multi-AI Chat Desktop: Ted Huang, MIT, 2026. Orijinal `LICENSE` ve `NOTICE.md` mevcut.
 OpenBrowser: 1129Aliasgar, MIT, 2026. Orijinal `integrations/openbrowser/LICENSE` mevcut.
 Bkz. `UPSTREAM_SOURCES.md`.
+
+## Sonraki kodlama iş akışı (geliştirme dalında)
+
+NetVera Kod Alanı içerisinde bir proje klasörü açıp dosya seçilebilir. Seçilen dosya kodlama göreviyle birlikte sohbet panelindeki mevcut asistan iş akışına gönderilebilir. Asistan yanıtları JSON kod bloğunda `EDIT_FILE` veya `CREATE_FILE` önerirse dosya önce/sonra karşılaştırmasıyla incelenir, ardından kullanıcı açıkça onaylarsa yerel dosyaya yazılır. `RUN_COMMAND` ve `DELETE_FILE` önerileri otomatik yürütülmez.
+
+Üç asistanın gerçek web oturumları üzerinde çalışma garantisi ve tam otonom terminal yetkisi bu sürümün kapsamı dışında. Windows önizleme derlemesi için GitHub Actions bölümüne bakın.
+
+## Korunan üst-kaynak agent sözleşmesi
+
+Ana uygulamanın orijinal sağlık kontrolü ve kaynak dağıtım sözleşmesi hâlâ depoda korunur:
+
+- Makine tarafından okunan sözleşme: `agent-release.json`.
+- Kaynak rehberi: `docs/AGENT-READY-SOURCE-RELEASE.md`.
+- Yerel çalıştırma denetimi: `node scripts/agent/launch.mjs --wait --timeout-ms 600000 --json`.
+- Gerekli sürüm: Node.js ^22.13.0 || >=24.0.0.
+- Docker zorunlu değildir; bu betikler Docker veya sistem araçlarını otomatik yüklemez.
+
+Bu maddeler, üst-kaynak sürüm sözleşmesinin ve mevcut testlerin tutarlılığı içindir; Codex veya Claude Code kurulumu NetVera'nın normal web asistanı hedefi için zorunlu değildir.
