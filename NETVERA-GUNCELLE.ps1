@@ -34,6 +34,9 @@ function Invoke-Native([string]$exe, [string[]]$arguments) {
     }
     return ($output -join [Environment]::NewLine)
 }
+# Normalize quoted Windows uninstall registry values before Join-Path.
+. (Join-Path -Path $PSScriptRoot -ChildPath 'scripts/updater-paths.ps1')
+
 function Installed-AppPath {
     $roots = @(
         'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
@@ -45,12 +48,21 @@ function Installed-AppPath {
         foreach ($record in $records) {
             if ($record.DisplayName -notlike 'NetVera AI IDE*') { continue }
             if ($record.InstallLocation) {
-                $candidate = Join-Path $record.InstallLocation 'NetVera AI IDE.exe'
-                if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+                # Some NSIS/Windows uninstall entries include literal quotes around C:\...
+                # Passing such values directly to Join-Path treats '"C:' as a drive.
+                $location = ConvertTo-NetVeraWindowsPath -Value ([string]$record.InstallLocation)
+                if ($location) {
+                    try {
+                        $candidate = Join-Path -Path $location -ChildPath 'NetVera AI IDE.exe' -ErrorAction Stop
+                        if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+                    } catch {
+                        Write-Verbose ('Ignored invalid registry InstallLocation: ' + $_.Exception.Message)
+                    }
+                }
             }
             if ($record.DisplayIcon) {
-                $candidate = ($record.DisplayIcon -replace ',\d+$','').Trim('"')
-                if ((Test-Path -LiteralPath $candidate -PathType Leaf) -and
+                $candidate = ConvertTo-NetVeraWindowsPath -Value ([string]$record.DisplayIcon) -DisplayIcon
+                if ($candidate -and (Test-Path -LiteralPath $candidate -PathType Leaf) -and
                     [IO.Path]::GetFileName($candidate) -ieq 'NetVera AI IDE.exe') { return $candidate }
             }
         }
