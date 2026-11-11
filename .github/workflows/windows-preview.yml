@@ -52,6 +52,28 @@ jobs:
             exit 1
           }
 
+      - name: Test updater registry path normalization
+        shell: pwsh
+        run: |
+          . ./scripts/updater-paths.ps1
+          $cases = @(
+            @{ Value = '  "C:\Program Files\NetVera AI IDE"  '; Expected = 'C:\Program Files\NetVera AI IDE'; DisplayIcon = $false },
+            @{ Value = '"C:\Users\pc\AppData\Local\Programs\NetVera AI IDE\NetVera AI IDE.exe",0'; Expected = 'C:\Users\pc\AppData\Local\Programs\NetVera AI IDE\NetVera AI IDE.exe'; DisplayIcon = $true },
+            @{ Value = ' "C:\Apps\NetVera AI IDE.exe", -1 '; Expected = 'C:\Apps\NetVera AI IDE.exe'; DisplayIcon = $true }
+          )
+          foreach ($case in $cases) {
+            $actual = ConvertTo-NetVeraWindowsPath -Value $case.Value -DisplayIcon:$case.DisplayIcon
+            if ($actual -ne $case.Expected) {
+              throw "Updater path mismatch: expected [$($case.Expected)], got [$actual]"
+            }
+            if (-not (Join-Path -Path $actual -ChildPath 'test.txt')) { throw 'Join-Path failed' }
+          }
+          foreach ($invalid in @('', 'relative\path', '"C', 'https://example.com/file.exe')) {
+            if (ConvertTo-NetVeraWindowsPath -Value $invalid) {
+              throw "Invalid registry path accepted: [$invalid]"
+            }
+          }
+
       - name: Verify TypeScript, lint, tests and adapters
         run: pnpm verify
 
