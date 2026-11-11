@@ -97,6 +97,8 @@ export const I18N_KEYS = [
   'provider.currentlyReading',
   'provider.clickToRecover',
   'provider.login',
+  'provider.switchGeminiAccount',
+  'provider.geminiLoginGuidance',
   'provider.metaLoginGuidance',
   'provider.moreActions',
   'provider.reload',
