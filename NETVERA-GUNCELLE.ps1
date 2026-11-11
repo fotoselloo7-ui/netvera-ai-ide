@@ -177,9 +177,8 @@ try {
         '--status','success','--limit','50',
         '--json','databaseId,headSha,conclusion,status,createdAt'
     )
-    $runs = @($json | ConvertFrom-Json)
-    $chosen = $runs | Where-Object { $_.headSha -eq $sha -and $_.conclusion -eq 'success' } | Select-Object -First 1
-    if (-not $chosen) {
+    $runId = Get-NetVeraSuccessfulRunId -Json $json -ExpectedSha $sha
+    if ($null -eq $runId) {
         Write-Host 'Bu commit icin Windows derlemesi henuz basarili olarak tamamlanmamis.' -ForegroundColor Yellow
         Write-Host "Kontrol: https://github.com/$repo/actions/workflows/$workflow"
         throw 'Kurulu uygulamaya dokunulmadi. Derleme basarili oldugunda komutu yeniden calistir.'
@@ -200,8 +199,8 @@ try {
     $tempDir = Join-Path $env:TEMP ("NetVeraUpdate-" + [guid]::NewGuid().ToString('N'))
     New-Item -Path $tempDir -ItemType Directory -Force | Out-Null
     try {
-        Write-Host "[3/5] Dogrulanmis Actions paketi indiriliyor (run #$($chosen.databaseId))..."
-        Invoke-Native 'gh' @('run','download',"$($chosen.databaseId)",'--repo',$repo,'--name',$artifactName,'--dir',$tempDir) | Out-Host
+        Write-Host "[3/5] Dogrulanmis Actions paketi indiriliyor (run #$runId)..."
+        Invoke-Native 'gh' @('run','download',([string]$runId),'--repo',$repo,'--name',$artifactName,'--dir',$tempDir) | Out-Host
         $installers = @(Get-ChildItem -LiteralPath $tempDir -Filter '*.exe' -Recurse -File |
           Where-Object { $_.Name -match '(?i)setup\.exe$' -and $_.Name -match '(?i)netvera' })
         if ($installers.Count -ne 1) {
