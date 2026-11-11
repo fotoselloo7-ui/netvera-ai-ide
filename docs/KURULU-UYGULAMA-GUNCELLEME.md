@@ -15,8 +15,8 @@ yeni özellikleri eklemez.
    NETVERA-GUNCELLE.cmd
    ```
 
-3. Dilersen `NETVERA-GUNCELLE.cmd` dosyasina sag tiklayip
-   **Gonder > Masaustu (kisayol olustur)** sec.
+3. Guncelleyici ilk basarili calismasinda otomatik olarak masaustune
+   **NetVera AI IDE - Guncelle** kisayolunu ekler.
 
 Sonraki her guncellemede masaustundeki kisayola cift tiklaman yeterlidir.
 
